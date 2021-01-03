@@ -35,14 +35,16 @@ public class DocumentController {
     @RequestMapping(value = "/documents", produces = { "application/json" }, method = RequestMethod.GET)
     private ResponseEntity<DocumentList> getDocuments(@PageableDefault(page = 0, size = 20) Pageable pageable){
         com.episen.tp2.business.model.DocumentList documents = documentManager.getAll(pageable);
+        // le code 302 FOUND envoie une redirection HTTP, et ne doit pas retourner de body, ici c'est 200
         return new ResponseEntity<DocumentList>((MultiValueMap<String, String>) documents, HttpStatus.FOUND);
     }
 
 
     // Post document
     @RequestMapping(value = "/documents", produces = { "application/json" }, consumes = { "application/json" }, method = RequestMethod.POST)
+    // Pourquoi retourner le DocumentSummary et pas le Document ???
+    // Lors de la création avec un POST c'est le système qui définit l'id pas l'appelant, il ne peut donc pas y avoir de conflit
     private ResponseEntity<DocumentSummary> postDocument(@RequestBody DocumentDTO documentDTO){
-
         try {
             documentManager.getDocumentById(documentDTO.getDocumentid()).equals(null);
         } catch (NullPointerException e) {
@@ -56,9 +58,12 @@ public class DocumentController {
     @RequestMapping(value = "/documents/{documentId}", produces = { "application/json" }, method = RequestMethod.GET)
     private ResponseEntity<Document> getDocumentById(@PathVariable("documentId") Long documentId){
         Document document = documentManager.getDocumentById(documentId).toEntity();
+
+        // Pourquoi déclencer une NullPointerException ?? Un simple document == null suffit
         if(document.equals(null)){
             throw new NotFoundException("Any document with id " + documentId);
         }
+        // Pareil un 302 renvoie une redirection pas un body
         else return new ResponseEntity<Document>(document, HttpStatus.FOUND);
     }
 
@@ -67,6 +72,8 @@ public class DocumentController {
     private ResponseEntity<DocumentDTO> putDocumentById(@PathVariable("documentId") Long documentId, @RequestBody DocumentDTO documentDTO){
         DocumentDTO updatedDocument = null;
         String user = SecurityContextHolder.getContext().getAuthentication().getName();
+        // Toute cette logique métier aurait du être dans le manager et non dans le controller, ici on ne devrait traiter que les exceptions
+        // et les transformations de format
         Optional<com.episen.tp2.business.model.Lock> lock = documentManager.getLock(documentId);
         boolean update = false;
         if(lock.equals(null)){
@@ -94,6 +101,7 @@ public class DocumentController {
     private ResponseEntity<Void> putDocumentStatusById(@PathVariable("documentId") Long documentId, @RequestBody DocumentStatusEnum documentStatusEnum){
         Document document = documentManager.getDocumentById(documentId).toEntity();
 
+        // Heu justement non ce serait le contraire
         if(document.getStatusdocument() != DocumentStatusEnum.VALIDATED){
             throw new BadRequestException("Document status must be VALIDATED");
         }

@@ -38,6 +38,8 @@ public class DocumentManagerImpl implements DocumentManager{
     }
 
     @Override
+    // Il manque la vérification du verrou, la gestion des l'etag ou version
+    // Et en plus cela ne respecte pas la spec que j'ai dnné
     public DocumentDTO putDocumentById(Long documentId, DocumentDTO documentDTO, String user) {
         Document documentToFind = documentDAO.findById(documentId).orElse(null);
         Document documentPut = orikaBeanMapper.map(documentDTO, Document.class);

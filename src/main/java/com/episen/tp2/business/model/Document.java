@@ -41,6 +41,7 @@ public class Document implements Serializable {
     private DocumentStatusEnum statusdocument;
 
     @ManyToOne(cascade = CascadeType.ALL)
+    // heu c'est quoi ca ?
     private DocumentList documentlist;
 
 
